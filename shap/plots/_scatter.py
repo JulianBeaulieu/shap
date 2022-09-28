@@ -18,7 +18,7 @@ from .._explanation import Explanation
 # TODO: Make the color bar a one-sided beeswarm plot so we can see the density along the color axis
 def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=colors.red_blue,
             dot_size=16, x_jitter="auto", alpha=1, title=None, xmin=None, xmax=None, ymin=None, ymax=None,
-            overlay=None, ax=None, ylabel="SHAP value", show=True):
+            overlay=None, ax=None, ylabel="SHAP value", show=True, feature_names=None):
     """ Create a SHAP dependence scatter plot, colored by an interaction feature.
 
     Plots the value of the feature on the x-axis and the SHAP value of the same feature
@@ -70,6 +70,9 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
          Optionally specify an existing matplotlib Axes object, into which the plot will be placed.
          In this case we do not create a Figure, otherwise we do.
 
+    feature_names : list
+        List of strings which will be used as the feature names in the plot. When feature_names is not defined
+        it will go back to the default behavior.
     """
 
 
@@ -111,7 +114,8 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
                         "shap.plots.dependence like: shap_values[:,column]")
 
     # this unpacks the explanation object for the code that was written earlier
-    feature_names = [shap_values.feature_names]
+    if(feature_names is None):
+        feature_names = [shap_values.feature_names]
     ind = 0
     shap_values_arr = shap_values.values.reshape(-1, 1)
     features = shap_values.data.reshape(-1, 1)
@@ -134,7 +138,7 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
     # wrap np.arrays as Explanations
     if isinstance(color, np.ndarray):
         color = Explanation(values=color, base_values=None, data=color)
-    
+
     # TODO: This stacking could be avoided if we use the new shap.utils.potential_interactions function
     if str(type(color)).endswith("Explanation'>"):
         shap_values2 = color
@@ -255,14 +259,14 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
     np.random.shuffle(oinds)
     xv = encode_array_if_needed(features[oinds, ind])
     xd = display_features[oinds, ind]
-    
+
     s = shap_values_arr[oinds, ind]
     if type(xd[0]) == str:
         name_map = {}
         for i in range(len(xv)):
             name_map[xd[i]] = xv[i]
         xnames = list(name_map.keys())
-    
+
     # allow a single feature name to be passed alone
     if type(feature_names) == str:
         feature_names = [feature_names]
@@ -309,7 +313,7 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
             jitter_amount = x_jitter * smallest_diff
             xv += (np.random.random_sample(size = len(xv))*jitter_amount) - (jitter_amount/2)
 
-    
+
     # the actual scatter plot, TODO: adapt the dot_size to the number of data points?
     xv_nan = np.isnan(xv)
     xv_notnan = np.invert(xv_nan)
@@ -404,7 +408,7 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
     # the histogram of the data
     if hist:
         ax2 = ax.twinx()
-        #n, bins, patches = 
+        #n, bins, patches =
         xlim = ax.get_xlim()
         xvals = np.unique(xv_no_jitter)
 
@@ -428,7 +432,7 @@ def scatter(shap_values, color="#1E88E5", hist=True, axis_color="#333333", cmap=
                 bin_edges = 10
             else:
                 bin_edges = 5
-        
+
         ax2.hist(xv[~np.isnan(xv)], bin_edges, density=False, facecolor='#000000', alpha=0.1, range=(xlim[0], xlim[1]), zorder=-1)
         ax2.set_ylim(0,len(xv))
 
@@ -613,7 +617,7 @@ def dependence_legacy(ind, shap_values=None, features=None, feature_names=None, 
     # get both the raw and display feature values
     oinds = np.arange(shap_values.shape[0]) # we randomize the ordering so plotting overlaps are not related to data ordering
     np.random.shuffle(oinds)
-    
+
     xv = encode_array_if_needed(features[oinds, ind])
 
     xd = display_features[oinds, ind]
