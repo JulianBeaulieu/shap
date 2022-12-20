@@ -15,7 +15,7 @@ from . import colors
 # plot that is associated with that feature get overlayed on the plot...it would quickly allow users to answer
 # why a feature is pushing down or up. Perhaps the best way to do this would be with an ICE plot hanging off
 # of the bar...
-def waterfall(shap_values, max_display=10, show=True):
+def waterfall(shap_values, max_display=10, show=True, feature_names=None):
     """ Plots an explantion of a single prediction as a waterfall plot.
 
     The SHAP value of a feature represents the impact of the evidence provided by that feature on the model's
@@ -36,15 +36,22 @@ def waterfall(shap_values, max_display=10, show=True):
     show : bool
         Whether matplotlib.pyplot.show() is called before returning. Setting this to False allows the plot
         to be customized further after it has been created.
+
+    feature_names : list
+        List of strings which will be used as the feature names in the plot. When feature_names is not defined
+        it will go back to the default behavior.
     """
 
     # Turn off interactive plot
     if show is False:
         plt.ioff()
 
+    # Set custom feature names
+    if(feature_names is None):
+        feature_names = shap_exp.feature_names
+
     base_values = shap_values.base_values
     features = shap_values.display_data if shap_values.display_data is not None else shap_values.data
-    feature_names = shap_values.feature_names
     lower_bounds = getattr(shap_values, "lower_bounds", None)
     upper_bounds = getattr(shap_values, "upper_bounds", None)
     values = shap_values.values
